@@ -10,10 +10,10 @@ typedef struct libnet_tcp_hdr TCP;
 
 class MyIPV4{
 public:
-    MyIPV4(uint8_t* packet){
+    MyIPV4(uint8_t* packet, uint32_t pkt_len){
         packet_ = (IP*)packet;
         header_length_ = (packet_->ip_hl << 2);
-        data_length_ = ntohs(packet_->ip_len);
+        data_length_ = pkt_len;
     }
     uint8_t GetHeaderLength();
     uint16_t GetIPLength();
@@ -29,12 +29,15 @@ private:
 class MyTCP{
 public:
     MyTCP(uint8_t* packet, MyIPV4& temp){
-        packet_ = (TCP*)(packet + (temp.packet_->ip_hl << 2));
-        header_length_ = (packet_->th_x2 << 2);
+        packet_ = (TCP*)(packet + temp.GetHeaderLength());
+        header_length_ = (packet_->th_off << 2);
         data_length_ = temp.GetIPLength() - (temp.GetHeaderLength() + header_length_);
     }
     uint16_t GetTCPLength(){
         return data_length_;
+    }
+    char* GetTcpPayload(){
+        return (char*)((uint8_t*)packet_ + header_length_);
     }
 private:
     TCP* packet_;

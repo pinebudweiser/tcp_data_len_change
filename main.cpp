@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <map>
 #include "protocols.h"
 #include "nfq-manager.h"
@@ -9,6 +10,7 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
     uint8_t* packet;
     uint32_t pkt_len;
     nfqnl_msg_packet_hdr *packet_header;
+    std::string payload;
     int id, hook_type;
     // std::map<key,value> -> key is flow and value is pair<SEQ, ACK>.
 
@@ -19,20 +21,21 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
     }
     pkt_len = nfq_get_payload(packet_handler, &packet);
 
-    MyIPV4 ip_instance(packet);
+    MyIPV4 ip_instance(packet, pkt_len);
 
     if(ip_instance.GetVersion() == IPPROTO_IPIP){
         switch(ip_instance.GetProtocol()){
             case IPPROTO_TCP:
-            // Todo :
-            // First. We have checking flow has exists TCP Payload.
-            // Second. Changed data must have map data. If We changing data then recalculate checksum and SEQ or ACK.
-            MyTCP tcp_instance(packet, ip_instance);
-            if(tcp_instance.GetTCPLength())
-            {
+                MyTCP tcp_instance(packet, ip_instance);
+                if(tcp_instance.GetTCPLength())
+                {
+                    payload = tcp_instance.GetTcpPayload();
+                    cout << payload << endl;
+                    if(payload.find("hacking") != string::npos){
 
-            }
-
+                    }
+                    printf("tcp_instance.GetTCPLength() = %d\n", tcp_instance.GetTCPLength());
+                }
             break;
         }
     }
