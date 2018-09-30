@@ -12,9 +12,11 @@ private:
     uint32_t dst_ip_;
     uint16_t src_port_;
     uint16_t dst_port_;
+    //uint32_t sequence_number_;
+    //uint32_t acknowledge_number_;
+public:
     uint32_t sequence_number_;
     uint32_t acknowledge_number_;
-public:
     // Only flow manager use little endian. because other class calculating checksum. They are using big-endian.
     FlowManager();
     FlowManager(MyIPV4& ref_ip, MyTCP& ref_tcp){

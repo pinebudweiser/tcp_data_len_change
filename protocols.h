@@ -49,6 +49,9 @@ public:
     uint16_t GetDestinationPort();
     uint32_t GetSequenceNumber();
     uint32_t GetAcknownledgeNumber();
+    bool FindACKPacket(){
+        return (packet_->th_flags == 0x10) ? true : false;
+    }
     char* GetPayload();
     void SetCheckSum();
     void InitPseudoHeader(MyIPV4& temp);

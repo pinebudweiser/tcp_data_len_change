@@ -55,6 +55,7 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                     std::string::size_type pos = 0;
                     if((pos = payload.find(from_string)) != string::npos){
                         // Find Itrator test
+                        /*
                         FlowManager temp_input_flow(ip_instance, tcp_instance);
                         temp_input_flow.reverse(ip_instance, tcp_instance);
                         std::map<FlowManager*, uint16_t>::iterator iter;
@@ -64,9 +65,27 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                                 cout << "Test call!" << (*iter).second << endl;
                             }
                         }
+                        */
+                        // TODO : How to adding my new packet?
+                        // First. make new data block. -> using string class
+                        // Second. making new ip and tcp instance
+                        // Third. copy it!
                     }
                 }
-                /* TODO : Find ACK Packet Thread */
+                /* TODO : Find ACK Packet Thread -> get data len*/
+                if(tcp_instance.FindACKPacket())
+                {
+                    FlowManager temp_input_flow(ip_instance, tcp_instance);
+                    temp_input_flow.reverse(ip_instance, tcp_instance);
+                    std::map<FlowManager*, uint16_t>::iterator iter;
+                    for(iter = input_data_map.begin(); iter != input_data_map.end(); iter++){ // If you modifying output_data find output_data
+                        if(temp_input_flow == (*iter).first)
+                        {
+                            cout << "Find ACK Packet!" << dec << (*iter).second << "    " <<hex << (*iter).first->sequence_number_
+                                 << "      " << (*iter).first->acknowledge_number_<< endl;
+                        }
+                    }
+                }
                 /* TODO : Find FIN Packet Thread -> free (in/out)data_map*/
             break;
         }
