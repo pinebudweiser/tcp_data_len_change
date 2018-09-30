@@ -45,7 +45,7 @@ public:
         header_length_ = (packet_->th_off << 2);
         data_length_ = temp.GetDataLength() - (temp.GetHeaderLength() + header_length_);
         InitPseudoHeader(temp);
-        MyTool::Init((uint8_t*)&pseudo_data_, (uint8_t*)packet_, sizeof(PSEUDO_HEADER), temp.GetDataLength());
+        MyTool::Init((uint8_t*)&pseudo_data_, (uint8_t*)packet_, sizeof(PSEUDO_HEADER), header_length_ + data_length_); // You must know data_length
     }
     uint16_t GetLength(){
         return data_length_;

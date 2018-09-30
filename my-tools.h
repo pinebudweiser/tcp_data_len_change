@@ -4,7 +4,6 @@
 #include<stdlib.h>
 #include<string.h>
 
-
 // This tool class use for IP, TCP, UDP Protocol.
 class MyTool{
 public:

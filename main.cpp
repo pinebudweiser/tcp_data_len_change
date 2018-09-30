@@ -23,7 +23,6 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
 
     MyIPV4 ip_instance(packet);
 
-
     if(ip_instance.GetVersion() == IPPROTO_IPIP){
         ip_instance.SetCheckSum();
         switch(ip_instance.GetProtocol()){
