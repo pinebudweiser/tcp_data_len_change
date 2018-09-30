@@ -31,9 +31,8 @@ public:
     uint32_t GetSourceIP();
     uint32_t GetDestinationIP();
     void SetCheckSum();
-    IP* packet_;
 private:
-    //IP* packet_;
+    IP* packet_;
 };
 
 class MyTCP : public MyTool{
@@ -46,17 +45,18 @@ public:
         InitPseudoHeader(temp);
     }
     uint16_t GetLength();
+    uint16_t GetSourcePort();
+    uint16_t GetDestinationPort();
+    uint32_t GetSequenceNumber();
+    uint32_t GetAcknownledgeNumber();
     char* GetPayload();
     void SetCheckSum();
     void InitPseudoHeader(MyIPV4& temp);
-    TCP* packet_;
-    uint16_t data_length_;
-    PSEUDO_HEADER pseudo_data_;
 private:
-    //TCP* packet_;
-    //PSEUDO_HEADER pseudo_data_;
+    TCP* packet_;
+    PSEUDO_HEADER pseudo_data_;
     uint8_t header_length_;
-    //uint16_t data_length_;
+    uint16_t data_length_;
 };
 
 #endif // PROTOCOLS_H

@@ -10,17 +10,16 @@ using namespace std;
 /* static variable */
 
 static string from_string;
-static string to_string;
+static string too_string;
+static std::map<FlowManager*, uint16_t> input_data_map, output_data_map;
 
 int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_handler, void *data){
     uint8_t* packet;
     uint32_t pkt_len;
     nfqnl_msg_packet_hdr *packet_header;
     std::string payload;
-    std::map<FlowManager*, > input_data_table;
-    std::map<FlowManager*, > output_data_table;
+    FlowManager *output_flow, *input_flow;
     int id, hook_type;
-    // std::map<key,value> -> key is flow and value is pair<SEQ, ACK>.
 
     packet_header = nfq_get_msg_packet_hdr(packet_handler);
     if (packet_header){
@@ -36,44 +35,39 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
             case IPPROTO_TCP:
                 MyTCP tcp_instance(packet, ip_instance);
 
-                /* Data change test flow*/
+                /* TODO : Flow supervise thread */
+                if(hook_type == 1) // INPUT
+                {
+                    input_flow = (FlowManager*)malloc(sizeof(FlowManager));
+                    input_flow->init(ip_instance, tcp_instance);
+                    input_data_map.insert(std::pair<FlowManager*, uint16_t>(input_flow, tcp_instance.GetLength()));
+                }
+                if(hook_type == 3) // OUTPUT
+                {
+                    output_flow = (FlowManager*)malloc(sizeof(FlowManager));
+                    output_flow->init(ip_instance, tcp_instance);
+                    output_data_map.insert(std::pair<FlowManager*, uint16_t>(output_flow, tcp_instance.GetLength()));
+                }
+                /* TODO : Check data and Modifying Thread*/
                 if(tcp_instance.GetLength())
                 {
-                    if(hook_type == 1) // INPUT
-                    {
-
-                    }
-                    else if(hook_type == 3) // OUTPUT
-                    {
-
-                    }
                     payload = tcp_instance.GetPayload();
                     std::string::size_type pos = 0;
                     if((pos = payload.find(from_string)) != string::npos){
-
+                        // Find Itrator test
+                        FlowManager temp_input_flow(ip_instance, tcp_instance);
+                        temp_input_flow.reverse(ip_instance, tcp_instance);
+                        std::map<FlowManager*, uint16_t>::iterator iter;
+                        for(iter = output_data_map.begin(); iter != output_data_map.end(); iter++){
+                            if(temp_input_flow == (*iter).first)
+                            {
+                                cout << "Test call!" << (*iter).second << endl;
+                            }
+                        }
                     }
                 }
-                /* TotalLength Response test */
-                /*
-                if(tcp_instance.GetLength() == 437)
-                {
-                    ip_instance.packet_->ip_len = htons(ntohs(ip_instance.packet_->ip_len) - 1);
-                    tcp_instance.pseudo_data_.tcp_length = htons((ntohs(tcp_instance.pseudo_data_.tcp_length) - 1));
-                    pkt_len -= 1;
-                    ip_instance.SetCheckSum();
-                    tcp_instance.SetCheckSum();
-                }
-                */
-                /* TotalLength Request test */
-                if(tcp_instance.GetLength() == 315)
-                {
-                    ip_instance.packet_->ip_len = htons(ntohs(ip_instance.packet_->ip_len) - 350);
-                    tcp_instance.pseudo_data_.tcp_length = htons((ntohs(tcp_instance.pseudo_data_.tcp_length) - 350));
-                    pkt_len -= 350;
-                    tcp_instance.data_length_ -= 350;
-                    ip_instance.SetCheckSum();
-                    tcp_instance.SetCheckSum();
-                }
+                /* TODO : Find ACK Packet Thread */
+                /* TODO : Find FIN Packet Thread -> free (in/out)data_map*/
             break;
         }
     }
@@ -85,7 +79,6 @@ int main(int argc, char** argv){
     int pkt_len;
     int nfq_descriptor;
     NetFilterQueueManager netfilter_instance(&QueueProcesser);
-    uint8_t* packet;
     nfq_handle* nfq_open_handle;
 
     if(argc != 3){
@@ -93,7 +86,7 @@ int main(int argc, char** argv){
         return 0;
     }
     from_string = argv[1];
-    to_string = argv[2];
+    too_string = argv[2]; // to_string ambiguous errors
     nfq_descriptor = netfilter_instance.GetDescritpor();
     nfq_open_handle = netfilter_instance.GetNFQHandle();
 

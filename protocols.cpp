@@ -42,3 +42,15 @@ void MyTCP::SetCheckSum(){
                  sizeof(PSEUDO_HEADER), header_length_ + data_length_); // dynamic allocation..
     packet_->th_sum = htons(MyTool::GetCheckSum());
 }
+uint16_t MyTCP::GetSourcePort(){
+    return packet_->th_sport;
+}
+uint16_t MyTCP:: GetDestinationPort(){
+    return packet_->th_dport;
+}
+uint32_t MyTCP::GetSequenceNumber(){
+    return packet_->th_ack;
+}
+uint32_t MyTCP::GetAcknownledgeNumber(){
+    return packet_->th_seq;
+}
