@@ -23,7 +23,6 @@ public:
     {
         packet_ = (IP*)packet;
         MyTool::Init((uint8_t*)packet_, GetHeaderLength());
-        packet_->ip_sum = 0; // Init checksum
     }
     uint8_t GetHeaderLength();
     uint16_t GetDataLength();
@@ -41,25 +40,17 @@ public:
     MyTCP(uint8_t* packet, MyIPV4& temp)
     {
         packet_ = (TCP*)(packet + temp.GetHeaderLength());
-        packet_->th_sum = 0;
         header_length_ = (packet_->th_off << 2);
         data_length_ = temp.GetDataLength() - (temp.GetHeaderLength() + header_length_);
         InitPseudoHeader(temp);
-        MyTool::Init((uint8_t*)&pseudo_data_, (uint8_t*)packet_, sizeof(PSEUDO_HEADER), header_length_ + data_length_); // You must know data_length
     }
-    uint16_t GetLength(){
-        return data_length_;
-    }
-    char* GetPayload(){
-        return (char*)((uint8_t*)packet_ + header_length_);
-    }
-    void SetCheckSum(){
-        packet_->th_sum = htons(MyTool::GetCheckSum());
-    }
+    uint16_t GetLength();
+    char* GetPayload();
+    void SetCheckSum();
     void InitPseudoHeader(MyIPV4& temp);
 private:
-    PSEUDO_HEADER pseudo_data_;
     TCP* packet_;
+    PSEUDO_HEADER pseudo_data_;
     uint8_t header_length_;
     uint16_t data_length_;
 };

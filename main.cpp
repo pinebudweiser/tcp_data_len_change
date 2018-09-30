@@ -24,24 +24,22 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
     MyIPV4 ip_instance(packet);
 
     if(ip_instance.GetVersion() == IPPROTO_IPIP){
-        ip_instance.SetCheckSum();
         switch(ip_instance.GetProtocol()){
             case IPPROTO_TCP:
                 MyTCP tcp_instance(packet, ip_instance);
-                tcp_instance.SetCheckSum();
                 if(tcp_instance.GetLength())
                 {
                     payload = tcp_instance.GetPayload();
-                    cout << payload << endl;
-                    if(payload.find("hacking") != string::npos){
-
+                    std::string::size_type pos = 0;
+                    if((pos = payload.find("hello_world")) != string::npos){
+                        memcpy(tcp_instance.GetPayload() + pos, "HELLO_WORLD", 11);
+                        tcp_instance.SetCheckSum();
                     }
                     printf("tcp_instance.GetTCPLength() = %d\n", tcp_instance.GetLength());
                 }
             break;
         }
     }
-
     return nfq_set_verdict(crt_handle, id, NF_ACCEPT, pkt_len, packet);
 }
 

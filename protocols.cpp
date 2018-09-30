@@ -19,6 +19,7 @@ uint32_t MyIPV4::GetDestinationIP(){
     return packet_->ip_dst.s_addr;
 }
 void MyIPV4::SetCheckSum(){
+    packet_->ip_sum = 0;
     packet_->ip_sum = htons(MyTool::GetCheckSum());
 }
 
@@ -28,4 +29,16 @@ void MyTCP::InitPseudoHeader(MyIPV4& temp){
     pseudo_data_.reserved = 0;
     pseudo_data_.protocol = temp.GetProtocol();
     pseudo_data_.tcp_length = htons(header_length_ + data_length_);
+}
+uint16_t MyTCP::GetLength(){
+    return data_length_;
+}
+char* MyTCP::GetPayload(){
+    return (char*)((uint8_t*)packet_ + header_length_);
+}
+void MyTCP::SetCheckSum(){
+    packet_->th_sum = 0; // You have must initialize before Init function.
+    MyTool::Init((uint8_t*)&pseudo_data_, (uint8_t*)packet_,
+                 sizeof(PSEUDO_HEADER), header_length_ + data_length_); // dynamic allocation..
+    packet_->th_sum = htons(MyTool::GetCheckSum());
 }
