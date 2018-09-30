@@ -19,8 +19,10 @@ typedef struct PseudoHeader{
 
 class MyIPV4 : public MyTool{
 public:
-    MyIPV4(uint8_t* packet){
+    MyIPV4(uint8_t* packet)
+    {
         packet_ = (IP*)packet;
+        MyTool::Init((uint8_t*)packet_, GetHeaderLength());
         packet_->ip_sum = 0; // Init checksum
     }
     uint8_t GetHeaderLength();
@@ -29,24 +31,30 @@ public:
     uint8_t GetProtocol();
     uint32_t GetSourceIP();
     uint32_t GetDestinationIP();
+    void SetCheckSum();
 private:
     IP* packet_;
 };
 
 class MyTCP : public MyTool{
 public:
-    MyTCP(uint8_t* packet, MyIPV4& temp){
+    MyTCP(uint8_t* packet, MyIPV4& temp)
+    {
         packet_ = (TCP*)(packet + temp.GetHeaderLength());
         packet_->th_sum = 0;
         header_length_ = (packet_->th_off << 2);
         data_length_ = temp.GetDataLength() - (temp.GetHeaderLength() + header_length_);
         InitPseudoHeader(temp);
+        MyTool::Init((uint8_t*)&pseudo_data_, (uint8_t*)packet_, sizeof(PSEUDO_HEADER), temp.GetDataLength());
     }
     uint16_t GetLength(){
         return data_length_;
     }
     char* GetPayload(){
         return (char*)((uint8_t*)packet_ + header_length_);
+    }
+    void SetCheckSum(){
+        packet_->th_sum = htons(MyTool::GetCheckSum());
     }
     void InitPseudoHeader(MyIPV4& temp);
 private:

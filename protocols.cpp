@@ -18,6 +18,9 @@ uint32_t MyIPV4::GetSourceIP(){
 uint32_t MyIPV4::GetDestinationIP(){
     return ntohl(packet_->ip_dst.s_addr);
 }
+void MyIPV4::SetCheckSum(){
+    packet_->ip_sum = htons(MyTool::GetCheckSum());
+}
 
 void MyTCP::InitPseudoHeader(MyIPV4& temp){
     pseudo_data_.src_addr = temp.GetSourceIP();
