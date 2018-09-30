@@ -8,6 +8,7 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += my-tools.h nfq-manager.h protocols.h
+HEADERS += my-tools.h nfq-manager.h protocols.h \
+    flow-manager.h
 SOURCES += main.cpp my-tools.cpp protocols.cpp
 LIBS += -lnetfilter_queue
