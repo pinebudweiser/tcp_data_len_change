@@ -22,6 +22,9 @@ void MyIPV4::SetCheckSum(){
     packet_->ip_sum = 0;
     packet_->ip_sum = htons(MyTool::GetCheckSum());
 }
+void MyIPV4::SetTotalLength(uint16_t add_value){
+   packet_->ip_len = htons(GetDataLength() + add_value);
+}
 
 void MyTCP::InitPseudoHeader(MyIPV4& temp){
     pseudo_data_.src_addr = temp.GetSourceIP();
@@ -32,6 +35,9 @@ void MyTCP::InitPseudoHeader(MyIPV4& temp){
 }
 uint16_t MyTCP::GetLength(){
     return data_length_;
+}
+uint16_t MyTCP::GetHeaderLength(){
+    return header_length_;
 }
 char* MyTCP::GetPayload(){
     return (char*)((uint8_t*)packet_ + header_length_);

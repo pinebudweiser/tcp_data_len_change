@@ -15,6 +15,8 @@ static std::map<FlowManager*, uint16_t> input_data_map, output_data_map;
 
 int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_handler, void *data){
     uint8_t* packet;
+    uint8_t* new_packet;
+    uint16_t difference_value; // use data difference
     uint32_t pkt_len;
     nfqnl_msg_packet_hdr *packet_header;
     std::string payload;
@@ -54,22 +56,24 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                     payload = tcp_instance.GetPayload();
                     std::string::size_type pos = 0;
                     if((pos = payload.find(from_string)) != string::npos){
-                        // Find Itrator test
-                        /*
-                        FlowManager temp_input_flow(ip_instance, tcp_instance);
-                        temp_input_flow.reverse(ip_instance, tcp_instance);
-                        std::map<FlowManager*, uint16_t>::iterator iter;
-                        for(iter = output_data_map.begin(); iter != output_data_map.end(); iter++){
-                            if(temp_input_flow == (*iter).first)
-                            {
-                                cout << "Test call!" << (*iter).second << endl;
-                            }
-                        }
-                        */
-                        // TODO : How to adding my new packet?
-                        // First. make new data block. -> using string class
-                        // Second. making new ip and tcp instance
-                        // Third. copy it!
+                        uint16_t prev_size = payload.size();
+                        //cout << "Prev Payload Size : " << payload.size() << endl;
+                        payload.erase(pos, from_string.size());
+                        payload.insert(pos, too_string);
+                        uint16_t after_size = payload.size();
+                        difference_value = (after_size - prev_size); // using another function.
+                        pkt_len = pkt_len + difference_value;
+                        new_packet = (uint8_t*)malloc(pkt_len);
+                        ip_instance.SetTotalLength(difference_value);
+                        /* set_new_packet - this is using ip_length!*/
+                        uint16_t temp_header_length = ip_instance.GetHeaderLength() + tcp_instance.GetHeaderLength();
+                        memcpy(new_packet, packet, temp_header_length);
+                        memcpy(new_packet + temp_header_length, payload.c_str(), payload.size());
+                        packet = new_packet;
+                        MyIPV4 ip_inst_temp(packet);
+                        MyTCP tcp_inst_temp(packet, ip_inst_temp);
+                        ip_inst_temp.SetCheckSum();
+                        tcp_inst_temp.SetCheckSum();
                     }
                 }
                 /* TODO : Find ACK Packet Thread -> get data len*/
@@ -83,6 +87,11 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                         {
                             cout << "Find ACK Packet!" << dec << (*iter).second << "    " <<hex << (*iter).first->sequence_number_
                                  << "      " << (*iter).first->acknowledge_number_<< endl;
+                            // TODO : How to adding my new packet?
+                            // First. make new data block. -> using string class
+                            // Second. making new ip and tcp instance
+                            // Third. copy it!
+
                         }
                     }
                 }

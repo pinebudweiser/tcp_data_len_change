@@ -31,6 +31,7 @@ public:
     uint32_t GetSourceIP();
     uint32_t GetDestinationIP();
     void SetCheckSum();
+    void SetTotalLength(uint16_t add_value); // recalculate function
 private:
     IP* packet_;
 };
@@ -45,6 +46,7 @@ public:
         InitPseudoHeader(temp);
     }
     uint16_t GetLength();
+    uint16_t GetHeaderLength();
     uint16_t GetSourcePort();
     uint16_t GetDestinationPort();
     uint32_t GetSequenceNumber();
