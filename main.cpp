@@ -21,20 +21,20 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
     }
     pkt_len = nfq_get_payload(packet_handler, &packet);
 
-    MyIPV4 ip_instance(packet, pkt_len);
+    MyIPV4 ip_instance(packet);
 
     if(ip_instance.GetVersion() == IPPROTO_IPIP){
         switch(ip_instance.GetProtocol()){
             case IPPROTO_TCP:
                 MyTCP tcp_instance(packet, ip_instance);
-                if(tcp_instance.GetTCPLength())
+                if(tcp_instance.GetLength())
                 {
-                    payload = tcp_instance.GetTcpPayload();
+                    payload = tcp_instance.GetPayload();
                     cout << payload << endl;
                     if(payload.find("hacking") != string::npos){
 
                     }
-                    printf("tcp_instance.GetTCPLength() = %d\n", tcp_instance.GetTCPLength());
+                    printf("tcp_instance.GetTCPLength() = %d\n", tcp_instance.GetLength());
                 }
             break;
         }
