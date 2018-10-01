@@ -22,14 +22,13 @@ public:
     MyIPV4(uint8_t* packet)
     {
         packet_ = (IP*)packet;
-        MyTool::Init((uint8_t*)packet_, GetHeaderLength());
     }
     uint8_t GetHeaderLength();
-    uint16_t GetDataLength();
     uint8_t GetVersion();
     uint8_t GetProtocol();
-    uint32_t GetSourceIP();
-    uint32_t GetDestinationIP();
+    uint16_t GetIpTotalLength();
+    uint32_t GetSourceIp();
+    uint32_t GetDestinationIp();
     void SetCheckSum();
     void SetTotalLength(uint16_t add_value); // recalculate function
 private:
@@ -40,18 +39,17 @@ class MyTCP : public MyTool{
 public:
     MyTCP(uint8_t* packet, MyIPV4& temp)
     {
-        packet_ = (TCP*)(packet + temp.GetHeaderLength());
-        header_length_ = (packet_->th_off << 2); //
-        data_length_ = temp.GetDataLength() - (temp.GetHeaderLength() + header_length_);
+        packet_ = (TCP*)(packet + temp.GetHeaderLength()); // TCP Header
+        data_length_ = temp.GetIpTotalLength() - (temp.GetHeaderLength() + MyTCP::GetHeaderLength()); // TCP Data length
         InitPseudoHeader(temp);
     }
-    uint16_t GetLength();
+    uint16_t GetTcpDataLength();
     uint16_t GetHeaderLength();
     uint16_t GetSourcePort();
     uint16_t GetDestinationPort();
     uint32_t GetSequenceNumber();
     uint32_t GetAcknownledgeNumber();
-    bool FindACKPacket(){
+    bool FindAckPacket(){
         return (packet_->th_flags == 0x10) ? true : false;
     }
     char* GetPayload();
@@ -60,7 +58,6 @@ public:
 private:
     TCP* packet_;
     PSEUDO_HEADER pseudo_data_;
-    uint8_t header_length_;
     uint16_t data_length_;
 };
 

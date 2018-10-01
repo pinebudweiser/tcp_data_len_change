@@ -38,20 +38,23 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                 MyTCP tcp_instance(packet, ip_instance);
 
                 /* TODO : Flow supervise thread */
-                if(hook_type == 1) // INPUT
+                if(tcp_instance.GetTcpDataLength() || tcp_instance.FindAckPacket())
                 {
-                    input_flow = (FlowManager*)malloc(sizeof(FlowManager));
-                    input_flow->init(ip_instance, tcp_instance);
-                    input_data_map.insert(std::pair<FlowManager*, uint16_t>(input_flow, tcp_instance.GetLength()));
-                }
-                if(hook_type == 3) // OUTPUT
-                {
-                    output_flow = (FlowManager*)malloc(sizeof(FlowManager));
-                    output_flow->init(ip_instance, tcp_instance);
-                    output_data_map.insert(std::pair<FlowManager*, uint16_t>(output_flow, tcp_instance.GetLength()));
+                    if(hook_type == 1) // INPUT
+                    {
+                        input_flow = (FlowManager*)malloc(sizeof(FlowManager));
+                        input_flow->init(ip_instance, tcp_instance);
+                        input_data_map.insert(std::pair<FlowManager*, uint16_t>(input_flow, tcp_instance.GetTcpDataLength()));
+                    }
+                    if(hook_type == 3) // OUTPUT
+                    {
+                        output_flow = (FlowManager*)malloc(sizeof(FlowManager));
+                        output_flow->init(ip_instance, tcp_instance);
+                        output_data_map.insert(std::pair<FlowManager*, uint16_t>(output_flow, tcp_instance.GetTcpDataLength()));
+                    }
                 }
                 /* TODO : Check data and Modifying Thread*/
-                if(tcp_instance.GetLength())
+                if(tcp_instance.GetTcpDataLength())
                 {
                     payload = tcp_instance.GetPayload();
                     std::string::size_type pos = 0;
@@ -62,22 +65,24 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                         payload.insert(pos, too_string);
                         uint16_t after_size = payload.size();
                         difference_value = (after_size - prev_size); // using another function.
-                        pkt_len = pkt_len + difference_value;
-                        new_packet = (uint8_t*)malloc(pkt_len);
-                        ip_instance.SetTotalLength(difference_value);
+                        pkt_len = pkt_len + difference_value; // pkt_len increase..
+                        new_packet = new uint8_t[pkt_len];
+                        ip_instance.SetTotalLength(difference_value); // iptotal_len increase..
                         /* set_new_packet - this is using ip_length!*/
                         uint16_t temp_header_length = ip_instance.GetHeaderLength() + tcp_instance.GetHeaderLength();
                         memcpy(new_packet, packet, temp_header_length);
                         memcpy(new_packet + temp_header_length, payload.c_str(), payload.size());
-                        packet = new_packet;
-                        MyIPV4 ip_inst_temp(packet);
-                        MyTCP tcp_inst_temp(packet, ip_inst_temp);
+                        //packet = new_packet;
+                        MyIPV4 ip_inst_temp(new_packet);
+                        MyTCP tcp_inst_temp(new_packet, ip_inst_temp);
                         ip_inst_temp.SetCheckSum();
                         tcp_inst_temp.SetCheckSum();
+                        return nfq_set_verdict(crt_handle, id, NF_ACCEPT, pkt_len, new_packet);
                     }
                 }
                 /* TODO : Find ACK Packet Thread -> get data len*/
-                if(tcp_instance.FindACKPacket())
+
+                if(tcp_instance.FindAckPacket())
                 {
                     FlowManager temp_input_flow(ip_instance, tcp_instance);
                     temp_input_flow.reverse(ip_instance, tcp_instance);
@@ -87,14 +92,10 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                         {
                             cout << "Find ACK Packet!" << dec << (*iter).second << "    " <<hex << (*iter).first->sequence_number_
                                  << "      " << (*iter).first->acknowledge_number_<< endl;
-                            // TODO : How to adding my new packet?
-                            // First. make new data block. -> using string class
-                            // Second. making new ip and tcp instance
-                            // Third. copy it!
-
                         }
                     }
                 }
+
                 /* TODO : Find FIN Packet Thread -> free (in/out)data_map*/
             break;
         }

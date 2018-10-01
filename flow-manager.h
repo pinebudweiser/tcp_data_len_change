@@ -20,8 +20,8 @@ public:
     // Only flow manager use little endian. because other class calculating checksum. They are using big-endian.
     FlowManager();
     FlowManager(MyIPV4& ref_ip, MyTCP& ref_tcp){
-        src_ip_ = ntohl(ref_ip.GetSourceIP());
-        dst_ip_ = ntohl(ref_ip.GetDestinationIP());
+        src_ip_ = ntohl(ref_ip.GetSourceIp());
+        dst_ip_ = ntohl(ref_ip.GetDestinationIp());
         src_port_ = ntohs(ref_tcp.GetSourcePort());
         dst_port_ = ntohs(ref_tcp.GetDestinationPort());
         sequence_number_ = ntohl(ref_tcp.GetSequenceNumber());
@@ -29,8 +29,8 @@ public:
     }
     void init(MyIPV4& ref_ip, MyTCP& ref_tcp)
     {
-        src_ip_ = ntohl(ref_ip.GetSourceIP());
-        dst_ip_ = ntohl(ref_ip.GetDestinationIP());
+        src_ip_ = ntohl(ref_ip.GetSourceIp());
+        dst_ip_ = ntohl(ref_ip.GetDestinationIp());
         src_port_ = ntohs(ref_tcp.GetSourcePort());
         dst_port_ = ntohs(ref_tcp.GetDestinationPort());
         sequence_number_ = ntohl(ref_tcp.GetSequenceNumber());
