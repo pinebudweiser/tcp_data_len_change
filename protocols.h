@@ -49,6 +49,8 @@ public:
     uint16_t GetDestinationPort();
     uint32_t GetSequenceNumber();
     uint32_t GetAcknownledgeNumber();
+    void SetSequenceNumber(uint32_t value);
+    void SetAcknownledgeNumber(uint32_t value);
     bool FindAckPacket(){
         return (packet_->th_flags == 0x10) ? true : false;
     }

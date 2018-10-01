@@ -69,3 +69,9 @@ uint32_t MyTCP::GetSequenceNumber(){
 uint32_t MyTCP::GetAcknownledgeNumber(){
     return packet_->th_seq;
 }
+void MyTCP::SetSequenceNumber(uint32_t value){
+    packet_->th_seq += htons(value);
+}
+void MyTCP::SetAcknownledgeNumber(uint32_t value){
+    packet_->th_ack += htons(value);
+}

@@ -38,7 +38,7 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                 MyTCP tcp_instance(packet, ip_instance);
 
                 /* TODO : Flow supervise thread */
-                if(tcp_instance.GetTcpDataLength() || tcp_instance.FindAckPacket())
+                if(tcp_instance.GetTcpDataLength())
                 {
                     if(hook_type == 1) // INPUT
                     {
@@ -53,7 +53,6 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                         output_data_map.insert(std::pair<FlowManager*, uint16_t>(output_flow, tcp_instance.GetTcpDataLength()));
                     }
                 }
-                /* TODO : Check data and Modifying Thread*/
                 if(tcp_instance.GetTcpDataLength())
                 {
                     payload = tcp_instance.GetPayload();
@@ -65,19 +64,18 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                         payload.insert(pos, too_string);
                         uint16_t after_size = payload.size();
                         difference_value = (after_size - prev_size); // using another function.
-                        pkt_len = pkt_len + difference_value; // pkt_len increase..
+                        pkt_len = ip_instance.GetIpTotalLength() + difference_value; // pkt_len increase..
                         new_packet = new uint8_t[pkt_len];
-                        ip_instance.SetTotalLength(difference_value); // iptotal_len increase..
-                        /* set_new_packet - this is using ip_length!*/
+                        //ip_instance.SetTotalLength(difference_value); // iptotal_len increase..
                         uint16_t temp_header_length = ip_instance.GetHeaderLength() + tcp_instance.GetHeaderLength();
                         memcpy(new_packet, packet, temp_header_length);
                         memcpy(new_packet + temp_header_length, payload.c_str(), payload.size());
-                        //packet = new_packet;
-                        MyIPV4 ip_inst_temp(new_packet);
-                        MyTCP tcp_inst_temp(new_packet, ip_inst_temp);
+                        packet = new_packet;
+                        MyIPV4 ip_inst_temp(packet);
+                        MyTCP tcp_inst_temp(packet, ip_inst_temp);
                         ip_inst_temp.SetCheckSum();
                         tcp_inst_temp.SetCheckSum();
-                        return nfq_set_verdict(crt_handle, id, NF_ACCEPT, pkt_len, new_packet);
+                        //return nfq_set_verdict(crt_handle, id, NF_ACCEPT, pkt_len, new_packet);
                     }
                 }
                 /* TODO : Find ACK Packet Thread -> get data len*/
@@ -90,12 +88,14 @@ int QueueProcesser(nfq_q_handle *crt_handle, nfgenmsg *nfmsg, nfq_data *packet_h
                     for(iter = input_data_map.begin(); iter != input_data_map.end(); iter++){ // If you modifying output_data find output_data
                         if(temp_input_flow == (*iter).first)
                         {
-                            cout << "Find ACK Packet!" << dec << (*iter).second << "    " <<hex << (*iter).first->sequence_number_
-                                 << "      " << (*iter).first->acknowledge_number_<< endl;
+                            cout << "Find ACK Packet!" << dec << (*iter).second << "    " << hex << (*iter).first->sequence_number_
+                                 << "      " << (*iter).first->acknowledge_number_<< "   difference value:" << difference_value << endl;
+                            temp_input_flow.reverse(ip_instance, tcp_instance);
+                            tcp_instance.SetAcknownledgeNumber(difference_value);
+                            tcp_instance.SetCheckSum();
                         }
                     }
                 }
-
                 /* TODO : Find FIN Packet Thread -> free (in/out)data_map*/
             break;
         }
